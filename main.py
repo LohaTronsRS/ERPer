@@ -23,8 +23,11 @@ class ERPEntry:
 
         if fExI:
             fEx = self.Name[fExI.start():-1]
-            if re.search(r'\b[y]\b', input('Keep extension %s? [y/*]: ' % fEx.decode('UTF-8')), flags=re.IGNORECASE):
-                nNew = nNew + fEx
+            if re.search(r'\b[y]\b', input('Remove existing extension %s? [y/*]: ' % fEx.decode('UTF-8')),
+                         flags=re.IGNORECASE):
+                fEx = bytes()
+                print(fEx)
+            nNew = nNew + fEx
 
         oSize = len(self.Name)
         self.Name = self.Name[:0x7] + (nNew if nNew else self.Name[0x7:-1]) + self.Name[-1:]
@@ -46,9 +49,10 @@ class ERPEntry:
     def rebuildEntry(self, size=None):
         nSize = size if size else len(self.Name)
         self.Count = math.floor(len(self.Data[0x6 + nSize + 0x14:]) / 0x21)
-        result = (len(self.Data)-4).to_bytes(4, 'little') + nSize.to_bytes(2, 'little')
+        result = len(self.Name).to_bytes(2, 'little')
         result = result + self.Name + self.Data[0x6+nSize:0x6+nSize+0x14] + self.Count.to_bytes(1, 'little')
         result = result + self.Data[0x6+nSize+0x15:]
+        result = len(result).to_bytes(4, 'little') + result
         self.Data = result
 
 
@@ -258,9 +262,10 @@ def CopySelect(ifile, ofile):
                     entryState = EntryOption(entry, copyMode)
                     if entryState and copyMode:
                         outputTable.addEntry(entry)
+                        input('Press Enter to continue...')
                     if entryState and not copyMode:
                         outputTable.removeEntry(entry)
-                    input('Press Enter to continue...')
+                        input('Press Enter to continue...')
             case '<':
                 theList.PrevPage()
             case '<<<':
