@@ -19,10 +19,13 @@ class ERPEntry:
         nNew = bytes(input('New name/path (blank to cancel): '), 'UTF-8')
         if not nNew:
             return False
+        fExI = re.search(r'\.', self.stringName())
 
-        fEx = self.Name[re.search(r'\.', self.stringName()).start():-1]
-        if re.search(r'\b[y]\b', input('Keep extension %s? [y/*]: ' % fEx.decode('UTF-8')), flags=re.IGNORECASE):
-            nNew = nNew + fEx
+        if fExI:
+            fEx = self.Name[fExI.start():-1]
+            if re.search(r'\b[y]\b', input('Keep extension %s? [y/*]: ' % fEx.decode('UTF-8')), flags=re.IGNORECASE):
+                nNew = nNew + fEx
+
         oSize = len(self.Name)
         self.Name = self.Name[:0x7] + (nNew if nNew else self.Name[0x7:-1]) + self.Name[-1:]
         self.rebuildEntry(oSize)
@@ -303,9 +306,9 @@ while True:
             CLS()
             outFile, iName = iFilename(input('Output Filename: '))
             if not outFile and iName:
-                CLS()
-                outFile = makeERP(iName)
-                writeData(*outFile)
+                if re.search(r'\b[y]\b', input('Create a blank %s ERP? [y/*]: ' % iName), flags=re.IGNORECASE):
+                    outFile = makeERP(iName)
+                    writeData(*outFile)
                 input('Press Enter to continue...')
             else:
                 input('Press Enter to continue...')
